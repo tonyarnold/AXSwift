@@ -80,6 +80,14 @@ public final class Application: UIElement {
         return axWindows?.map { UIElement($0) }
     }
 
+    public func menuBar() throws -> MenuBar? {
+        guard let menuBar: AXUIElement = try attribute(.menuBar) else {
+            return nil
+        }
+
+        return MenuBar(menuBar)
+    }
+
     /// Returns the element at the specified top-down coordinates, or nil if there is none.
     public override func elementAtPosition(_ x: Float, _ y: Float) throws -> UIElement? {
         return try super.elementAtPosition(x, y)
