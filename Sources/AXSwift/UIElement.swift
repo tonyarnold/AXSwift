@@ -1,4 +1,4 @@
-import Cocoa
+import AppKit
 import Foundation
 
 /// Holds and interacts with any accessibility element.
@@ -46,10 +46,12 @@ open class UIElement {
     /// The state and role of the AXUIElement is not checked.
     public required init(_ nativeElement: AXUIElement) {
         // Since we are dealing with low-level C APIs, it never hurts to double check types.
-        assert(CFGetTypeID(nativeElement) == AXUIElementGetTypeID(),
-               "nativeElement is not an AXUIElement")
+        assert(
+            CFGetTypeID(nativeElement) == AXUIElementGetTypeID(),
+            "nativeElement is not an AXUIElement"
+        )
 
-        element = nativeElement
+        self.element = nativeElement
     }
 
     /// Checks if the current process is a trusted accessibility client. If false, all APIs will
@@ -81,7 +83,7 @@ open class UIElement {
         for attr in attrs where Attribute(rawValue: attr) == nil {
             print("Unrecognized attribute: \(attr)")
         }
-        return attrs.compactMap({ Attribute(rawValue: $0) })
+        return attrs.compactMap { Attribute(rawValue: $0) }
     }
 
     // This version is named differently so the caller doesn't have to specify the return type when
@@ -218,7 +220,7 @@ open class UIElement {
     }
 
     open func getMultipleAttributes(_ attributes: [Attribute]) throws -> [Attribute: Any] {
-        let values = try fetchMultiAttrValues(attributes.map({ $0.rawValue }))
+        let values = try fetchMultiAttrValues(attributes.map { $0.rawValue })
         return try packMultiAttrValues(attributes, values: values)
     }
 
@@ -235,7 +237,8 @@ open class UIElement {
             attributes as CFArray,
             // keep going on errors (particularly NoValue)
             AXCopyMultipleAttributeOptions(rawValue: 0),
-            &valuesCF)
+            &valuesCF
+        )
 
         guard error == .success else {
             throw error
@@ -245,8 +248,10 @@ open class UIElement {
     }
 
     // Helper: Packs names, values into dictionary
-    fileprivate func packMultiAttrValues<Attr>(_ attributes: [Attr],
-                                               values: [AnyObject]) throws -> [Attr: Any] {
+    fileprivate func packMultiAttrValues<Attr>(
+        _ attributes: [Attr],
+        values: [AnyObject]
+    ) throws -> [Attr: Any] {
         var result = [Attr: Any]()
         for (index, attribute) in attributes.enumerated() {
             if try checkMultiAttrValue(values[index]) {
@@ -264,7 +269,7 @@ open class UIElement {
         }
 
         // Check for error
-        if CFGetTypeID(value) == AXValueGetTypeID() &&
+        if CFGetTypeID(value) == AXValueGetTypeID(),
             AXValueGetType(value as! AXValue).rawValue == kAXValueAXErrorType {
             var error: AXError = AXError.success
             AXValueGetValue(value as! AXValue, AXValueType(rawValue: kAXValueAXErrorType)!, &error)
@@ -299,7 +304,7 @@ open class UIElement {
             // For consistency with the other array attribute APIs, throw if it's not an array.
             throw AXError.illegalArgument
         }
-        return array.map({ unpackAXValue($0) as! T })
+        return array.map { unpackAXValue($0) as! T }
     }
 
     /// Returns a subset of values from an array attribute.
@@ -334,7 +339,7 @@ open class UIElement {
         }
 
         let array = values! as [AnyObject]
-        return array.map({ unpackAXValue($0) as! T })
+        return array.map { unpackAXValue($0) as! T }
     }
 
     /// Returns the number of values an array attribute has.
@@ -365,7 +370,7 @@ open class UIElement {
     /// Parameterized attributes are attributes that require parameters to retrieve. For example,
     /// the cell contents of a spreadsheet might require the row and column of the cell you want.
     open func parameterizedAttributes() throws -> [Attribute] {
-        return try parameterizedAttributesAsStrings().compactMap({ Attribute(rawValue: $0) })
+        return try parameterizedAttributesAsStrings().compactMap { Attribute(rawValue: $0) }
     }
 
     open func parameterizedAttributesAsStrings() throws -> [String] {
@@ -449,6 +454,8 @@ open class UIElement {
                 return result
             case .illegal:
                 return value
+            @unknown default:
+                fatalError()
             }
         default:
             return value
@@ -478,7 +485,7 @@ open class UIElement {
 
     /// Returns a list of actions that can be performed on the element.
     open func actions() throws -> [Action] {
-        return try actionsAsStrings().compactMap({ Action(rawValue: $0) })
+        return try actionsAsStrings().compactMap { Action(rawValue: $0) }
     }
 
     open func actionsAsStrings() throws -> [String] {
@@ -621,8 +628,8 @@ extension UIElement: CustomStringConvertible {
 
         let pidString = (pid == nil) ? "??" : String(pid!)
         return "<\(roleString) \""
-             + "\(description ?? String(describing: element))"
-             + "\" (pid=\(pidString))>"
+            + "\(description ?? String(describing: element))"
+            + "\" (pid=\(pidString))>"
     }
 
     public var inspect: String {
@@ -639,7 +646,7 @@ extension UIElement: CustomStringConvertible {
 // MARK: - Equatable
 
 extension UIElement: Equatable {}
-public func ==(lhs: UIElement, rhs: UIElement) -> Bool {
+public func == (lhs: UIElement, rhs: UIElement) -> Bool {
     return CFEqual(lhs.element, rhs.element)
 }
 

@@ -38,6 +38,8 @@ extension AXError: CustomStringConvertible {
             return "ParameterizedAttributeUnsupported"
         case .notEnoughPrecision:
             return "NotEnoughPrecision"
+        @unknown default:
+            fatalError()
         }
     }
 
@@ -52,4 +54,4 @@ extension AXError: CustomStringConvertible {
 ///
 /// - seeAlso: [AXUIElement.h Reference](https://developer.apple.com/library/mac/documentation/ApplicationServices/Reference/AXUIElement_header_reference/)
 /// - seeAlso: `UIElement` for a list of errors that you should handle
-//public typealias Error = AXError
+// public typealias Error = AXError

@@ -1,6 +1,6 @@
-import Cocoa
-import Foundation
+import AppKit
 import Darwin
+import Foundation
 
 /// Observers watch for events on an application's UI elements.
 ///
@@ -8,13 +8,17 @@ import Darwin
 ///
 /// - seeAlso: `UIElement` for a list of exceptions that can be thrown.
 public final class Observer {
-    public typealias Callback = (_ observer: Observer,
-                                 _ element: UIElement,
-                                 _ notification: AXNotification) -> Void
-    public typealias CallbackWithInfo = (_ observer: Observer,
-                                         _ element: UIElement,
-                                         _ notification: AXNotification,
-                                         _ info: [String: AnyObject]?) -> Void
+    public typealias Callback = (
+        _ observer: Observer,
+        _ element: UIElement,
+        _ notification: AXNotification
+    ) -> Void
+    public typealias CallbackWithInfo = (
+        _ observer: Observer,
+        _ element: UIElement,
+        _ notification: AXNotification,
+        _ info: [String: AnyObject]?
+    ) -> Void
 
     let pid: pid_t
     let axObserver: AXObserver!
@@ -32,7 +36,7 @@ public final class Observer {
         pid = processID
         self.axObserver = axObserver
         self.callback = callback
-        callbackWithInfo = nil
+        self.callbackWithInfo = nil
 
         guard error == .success else {
             throw error
@@ -53,7 +57,7 @@ public final class Observer {
         pid = processID
         self.axObserver = axObserver
         self.callback = nil
-        callbackWithInfo = callback
+        self.callbackWithInfo = callback
 
         guard error == .success else {
             throw error
@@ -74,7 +78,8 @@ public final class Observer {
         CFRunLoopAddSource(
             RunLoop.current.getCFRunLoop(),
             AXObserverGetRunLoopSource(axObserver),
-            CFRunLoopMode.defaultMode)
+            CFRunLoopMode.defaultMode
+        )
     }
 
     /// Stops sending events to your callback until the next call to `start`.
@@ -87,7 +92,8 @@ public final class Observer {
         CFRunLoopRemoveSource(
             RunLoop.current.getCFRunLoop(),
             AXObserverGetRunLoopSource(axObserver),
-            CFRunLoopMode.defaultMode)
+            CFRunLoopMode.defaultMode
+        )
     }
 
     /// Adds a notification for the observer to watch.
@@ -100,8 +106,10 @@ public final class Observer {
     ///         error is not passed on for consistency with `start()` and `stop()`.
     /// - throws: `Error.NotificationUnsupported`: The element does not support notifications (note
     ///           that the system-wide element does not support notifications).
-    public func addNotification(_ notification: AXNotification,
-                                forElement element: UIElement) throws {
+    public func addNotification(
+        _ notification: AXNotification,
+        forElement element: UIElement
+    ) throws {
         let selfPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
         let error = AXObserverAddNotification(
             axObserver, element.element, notification.rawValue as CFString, selfPtr
@@ -119,8 +127,10 @@ public final class Observer {
     ///         error is not passed on for consistency with `start()` and `stop()`.
     /// - throws: `Error.NotificationUnsupported`: The element does not support notifications (note
     ///           that the system-wide element does not support notifications).
-    public func removeNotification(_ notification: AXNotification,
-                                   forElement element: UIElement) throws {
+    public func removeNotification(
+        _ notification: AXNotification,
+        forElement element: UIElement
+    ) throws {
         let error = AXObserverRemoveNotification(
             axObserver, element.element, notification.rawValue as CFString
         )
@@ -130,10 +140,12 @@ public final class Observer {
     }
 }
 
-private func internalCallback(_ axObserver: AXObserver,
-                              axElement: AXUIElement,
-                              notification: CFString,
-                              userData: UnsafeMutableRawPointer?) {
+private func internalCallback(
+    _ axObserver: AXObserver,
+    axElement: AXUIElement,
+    notification: CFString,
+    userData: UnsafeMutableRawPointer?
+) {
     guard let userData = userData else { fatalError("userData should be an AXSwift.Observer") }
 
     let observer = Unmanaged<Observer>.fromOpaque(userData).takeUnretainedValue()
@@ -145,11 +157,13 @@ private func internalCallback(_ axObserver: AXObserver,
     observer.callback!(observer, element, notif)
 }
 
-private func internalInfoCallback(_ axObserver: AXObserver,
-                                  axElement: AXUIElement,
-                                  notification: CFString,
-                                  cfInfo: CFDictionary,
-                                  userData: UnsafeMutableRawPointer?) {
+private func internalInfoCallback(
+    _ axObserver: AXObserver,
+    axElement: AXUIElement,
+    notification: CFString,
+    cfInfo: CFDictionary,
+    userData: UnsafeMutableRawPointer?
+) {
     guard let userData = userData else { fatalError("userData should be an AXSwift.Observer") }
 
     let observer = Unmanaged<Observer>.fromOpaque(userData).takeUnretainedValue()

@@ -1,4 +1,4 @@
-import Cocoa
+import AppKit
 
 /// A `UIElement` for an application.
 public final class Application: UIElement {
@@ -37,8 +37,8 @@ public final class Application: UIElement {
     public class func all() -> [Application] {
         let runningApps = NSWorkspace.shared.runningApplications
         return runningApps
-            .filter({ $0.activationPolicy != .prohibited })
-            .compactMap({ Application($0) })
+            .filter { $0.activationPolicy != .prohibited }
+            .compactMap { Application($0) }
     }
 
     /// Creates an `Application` for every running instance of the given `bundleID`.
@@ -46,8 +46,8 @@ public final class Application: UIElement {
     public class func allForBundleID(_ bundleID: String) -> [Application] {
         let runningApps = NSWorkspace.shared.runningApplications
         return runningApps
-            .filter({ $0.bundleIdentifier == bundleID })
-            .compactMap({ Application($0) })
+            .filter { $0.bundleIdentifier == bundleID }
+            .compactMap { Application($0) }
     }
 
     /// Creates an `Observer` on this application, if it is still alive.
@@ -56,7 +56,7 @@ public final class Application: UIElement {
             return try Observer(processID: try pid(), callback: callback)
         } catch AXError.invalidUIElement {
             return nil
-        } catch let error {
+        } catch {
             fatalError("Caught unexpected error creating observer: \(error)")
         }
     }
@@ -67,7 +67,7 @@ public final class Application: UIElement {
             return try Observer(processID: try pid(), callback: callback)
         } catch AXError.invalidUIElement {
             return nil
-        } catch let error {
+        } catch {
             fatalError("Caught unexpected error creating observer: \(error)")
         }
     }
@@ -77,7 +77,7 @@ public final class Application: UIElement {
     ///            cannot be retrieved.
     public func windows() throws -> [UIElement]? {
         let axWindows: [AXUIElement]? = try attribute("AXWindows")
-        return axWindows?.map({ UIElement($0) })
+        return axWindows?.map { UIElement($0) }
     }
 
     /// Returns the element at the specified top-down coordinates, or nil if there is none.
