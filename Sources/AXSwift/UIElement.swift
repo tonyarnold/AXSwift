@@ -45,12 +45,6 @@ open class UIElement {
     ///
     /// The state and role of the AXUIElement is not checked.
     public required init(_ nativeElement: AXUIElement) {
-        // Since we are dealing with low-level C APIs, it never hurts to double check types.
-        assert(
-            CFGetTypeID(nativeElement) == AXUIElementGetTypeID(),
-            "nativeElement is not an AXUIElement"
-        )
-
         self.element = nativeElement
     }
 
@@ -71,6 +65,16 @@ open class UIElement {
     open class var globalMessagingTimeout: Float {
         get { return systemWideElement.messagingTimeout }
         set { systemWideElement.messagingTimeout = newValue }
+    }
+
+    // MARK: - Basic
+
+    open func title() throws -> String? {
+        return try attribute(.title)
+    }
+
+    open func label() throws -> String? {
+        return try attribute(.labelValue)
     }
 
     // MARK: - Attributes

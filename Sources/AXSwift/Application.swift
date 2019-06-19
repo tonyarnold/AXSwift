@@ -73,19 +73,27 @@ public final class Application: UIElement {
     }
 
     /// Returns a list of the application's visible windows.
-    /// - returns: An array of `UIElement`s, one for every visible window. Or `nil` if the list
-    ///            cannot be retrieved.
-    public func windows() throws -> [UIElement]? {
-        let axWindows: [AXUIElement]? = try attribute("AXWindows")
-        return axWindows?.map { UIElement($0) }
+    /// - returns: An array of `UIElement`s, for visible windows.
+    public func windows() throws -> [UIElement] {
+        guard
+            let elements: [AXUIElement]? = try attribute("AXWindows"),
+            let unwrappedElements = elements
+        else {
+            return []
+        }
+
+        return unwrappedElements.map(UIElement.init(_:))
     }
 
     public func menuBar() throws -> MenuBar? {
-        guard let menuBar: AXUIElement = try attribute(.menuBar) else {
+        guard
+            let element: AXUIElement? = try attribute("AXMenuBar"),
+            let unwrappedElement = element
+        else {
             return nil
         }
 
-        return MenuBar(menuBar)
+        return MenuBar(unwrappedElement)
     }
 
     /// Returns the element at the specified top-down coordinates, or nil if there is none.
